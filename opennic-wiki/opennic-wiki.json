@@ -1,7 +1,8 @@
 {
 	"variables": {
 		"aws_access_key": "",
-		"aws_secret_key": ""
+		"aws_secret_key": "",
+		"ssh_key": ""
 	},
 	"builders": [
 		{
@@ -64,7 +65,11 @@
 				"aptget update",
 				"aptget dist-upgrade",
 				"aptget install nfs-common git-core php-common php7.0-cli php7.0-common php7.0-fpm php7.0-gd php7.0-json php7.0-ldap php7.0-mbstring php7.0-opcache php7.0-readline php7.0-xml nginx-light php-memcached",
-				"rm /etc/nginx/sites-enabled/default"
+				"rm /etc/nginx/sites-enabled/default",
+				"echo mkdir -p /root/.ssh/",
+				"echo {{user `ssh_key`}} | base64 -d > /root/.ssh/id_ed25519",
+				"chmod 600 /root/.ssh/id_ed25519",
+				"chown www-data:www-data /wiki/"
 			]
 		},
 		{
