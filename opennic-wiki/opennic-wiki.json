@@ -1,0 +1,78 @@
+{
+	"variables": {
+		"aws_access_key": "",
+		"aws_secret_key": ""
+	},
+	"builders": [
+		{
+			"type": "amazon-ebs",
+			"access_key": "{{user `aws_access_key`}}",
+			"secret_key": "{{user `aws_secret_key`}}",
+			"region": "us-east-1",
+			"source_ami_filter": {
+				"filters": {
+					"architecture": "x86_64",
+					"hypervisor": "xen",
+					"image-type": "machine",
+					"name": "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*",
+					"owner-id": "099720109477",
+					"root-device-type": "ebs",
+					"state": "available",
+					"virtualization-type": "hvm"
+				},
+				"owners": ["099720109477"],
+				"most_recent": true
+			},
+			"instance_type": "t2.nano",
+			"ssh_username": "ubuntu",
+			"ami_name": "wiki {{timestamp}}"
+		}
+	],
+	"provisioners": [
+		{
+			"type": "shell-local",
+			"command": "tar --no-acls --no-selinux --no-xattrs --numeric-owner --owner=root --group=root -C files-pre/ -cvzf files-pre.tar.gz.tmp . && mv files-pre.tar.gz.tmp files-pre.tar.gz"
+		},
+		{
+			"type": "shell-local",
+			"command": "tar --no-acls --no-selinux --no-xattrs --numeric-owner --owner=root --group=root -C files-post/ -cvzf files-post.tar.gz.tmp . && mv files-post.tar.gz.tmp files-post.tar.gz"
+		},
+		{
+			"type": "file",
+			"source": "./files-pre.tar.gz",
+			"destination": "/tmp/files-pre.tar.gz",
+			"direction": "upload"
+		},
+		{
+			"type": "file",
+			"source": "./files-post.tar.gz",
+			"destination": "/tmp/files-post.tar.gz",
+			"direction": "upload"
+		},
+		{
+			"type": "shell",
+			"execute_command": "sudo sh -c 'chmod +x {{ .Path }}; {{ .Vars }} {{ .Path }}'",
+			"inline": [
+				"tar -C / -xvzf /tmp/files-pre.tar.gz && rm /tmp/files-pre.tar.gz"
+			]
+		},
+		{
+			"type": "shell",
+			"execute_command": "sudo sh -c 'chmod +x {{ .Path }}; {{ .Vars }} {{ .Path }}'",
+			"inline": [
+				"aptget(){ env DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt-get -y --no-install-recommends -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" \"${@}\";}",
+				"aptget update",
+				"aptget dist-upgrade",
+				"aptget install nfs-common git-core php-common php7.0-cli php7.0-common php7.0-fpm php7.0-gd php7.0-json php7.0-ldap php7.0-mbstring php7.0-opcache php7.0-readline php7.0-xml nginx-light php-memcached",
+				"rm /etc/nginx/sites-enabled/default"
+			]
+		},
+		{
+			"type": "shell",
+			"execute_command": "sudo sh -c 'chmod +x {{ .Path }}; {{ .Vars }} {{ .Path }}'",
+			"inline": [
+				"tar -C / -xvzf /tmp/files-post.tar.gz && rm /tmp/files-post.tar.gz"
+			]
+		}
+	]
+}
