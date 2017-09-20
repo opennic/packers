@@ -19,7 +19,11 @@ if ( set -o noclobber; echo "${cur_ts}" > /wiki/.gitsync.lock ) 2> /dev/null; th
 	cd /wiki
 	rm -f /wiki/.git/index.lock
 	git add -A
-	git commit -m "$(TZ=Etc/UTC date -Is)" && git push --force origin master
+	if git commit -m "$(TZ=Etc/UTC date -Is)"; then
+		for remote in $(git remote); do
+			GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push --force "${remote}" master
+		done
+	fi
 	rm -f /wiki/.gitsync.lock
 	trap - INT TERM EXIT
 	exit 0
