@@ -1,2 +1,2 @@
 /dev/xvda1 / ext4 rw,noatime,nodiratime,discard,data=ordered 0 0
-fs-ee48faa7.efs.us-east-1.amazonaws.com:/ /wiki nfs4 defaults,noatime,nodiratime,sync 0 0
+fs-ee48faa7.efs.us-east-1.amazonaws.com:/ /wiki nfs4 defaults,noatime,nodiratime,sync,fsc 0 0
